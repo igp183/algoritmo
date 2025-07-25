@@ -8,10 +8,34 @@
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <h1>DSA Visualizer</h1>
-    <button onclick="startSort()">Start Sort</button>
-    <button onclick="generateArray()">Generate Array</button>
-    <div id="array-container"></div>
+    <div class="container">
+        <h1>DSA Visualizer</h1>
+        
+        <div class="controls">
+            <button onclick="startSort()">▶️ Start Sort</button>
+            <button onclick="generateArray()">🔄 Generate Array</button>
+        </div>
+
+        <div class="speed-control">
+            <label for="speed">⚡ Animation Speed:</label>
+            <input type="range" id="speed" min="10" max="999" value="100" oninput="updateSpeed(this.value)">
+            <span id="speedDisplay">100ms</span>
+        </div>
+
+        <div id="array-container"></div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Comparisons</div>
+                <div class="stat-value" id="comparisons">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Swaps</div>
+                <div class="stat-value" id="swaps">0</div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
