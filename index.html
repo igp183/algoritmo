@@ -51,21 +51,25 @@
     <div class="controls-panel" id="controlsPanel">
       <div class="control-group">
         <label class="control-label">Actions</label>
-        <button class="control-button" onclick="startSort()">▶️ Start Sorting</button>
-        <button class="control-button" onclick="generateArray()">🔄 Generate New Array</button>
+        
       </div>
       <div class="control-group">
         <label class="control-label">Animation Speed</label>
-        <div class="speed-control">
-          <input type="range" class="speed-slider" id="speed" min="10" max="1000" value="300" oninput="updateSpeed(this.value)">
-          <div class="speed-display" id="speedDisplay">300ms</div>
-        </div>
+        
       </div>
     </div>
 
     <!-- Main Content -->
     <main class="content">
       <div class="visualization-container">
+        <div class="button-container">
+          <button class="control-button" onclick="startSort()">▶️ Start Sorting</button>
+          <button class="control-button" onclick="generateArray()">🔄 Generate New Array</button>
+        </div>
+        <div class="speed-control">
+          <input type="range" class="speed-slider" id="speed" min="10" max="1000" value="300" oninput="updateSpeed(this.value)">
+          <div class="speed-display" id="speedDisplay">300ms</div>
+        </div>
         <div id="array-container"></div>
       </div>
       <div class="stats">

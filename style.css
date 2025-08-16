@@ -226,6 +226,48 @@ body {
 .control-button:active {
   transform: translateY(0);
 }
+.visualization-container .control-button {
+  background: rgba(45, 55, 72, 0.8);
+  border: 1px solid rgba(74, 85, 104, 0.8);
+  color: #e2e8f0;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.visualization-container .control-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.2), rgba(102, 126, 234, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.visualization-container .control-button:hover {
+  background: rgba(45, 55, 72, 1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.visualization-container .control-button:hover::before {
+  opacity: 1;
+}
+
+.visualization-container .control-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.visualization-container .control-button span {
+  position: relative;
+  z-index: 1;
+}
 
 .speed-control {
   display: flex;
@@ -446,4 +488,15 @@ body {
   .controls-panel {
     width: 280px;
   }
+}
+
+.button-container {
+  display: flex;
+  gap: 10px; /* Adds space between buttons */
+  margin-bottom: 10px; /* Adds space below the buttons */
+}
+
+.control-button {
+  /* Optional: Add this if you want buttons to grow equally */
+  flex: 1;
 }

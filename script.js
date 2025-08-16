@@ -7,13 +7,6 @@ let comparisons = 0;
 let swaps = 0;
 let isRunning = false;
 
-function toggleControls() {
-    const panel = document.getElementById('controlsPanel');
-    const overlay = document.querySelector('.controls-overlay');
-    panel.classList.toggle('open');
-    overlay.classList.toggle('open');
-}
-
 function generateArray() {
     if (isRunning) return;
 
