@@ -1,77 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Algorithm Visualizer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="main-container">
-    <!-- Header -->
     <header class="header">
       <div class="header-content">
-        <div class="logo-section">
-          <div class="logo">Algorithm Visualizer</div>
-          <div class="algorithm-info">
-            <span class="algorithm-name">Bubble Sort</span>
-            <div class="complexity-badge">
-              O(n²)
-              <div class="complexity-tooltip">
-                <div class="complexity-grid">
-                  <div class="complexity-item worst">
-                    <div class="complexity-label">Worst</div>
-                    <div class="complexity-value">O(n²)</div>
-                  </div>
-                  <div class="complexity-item average">
-                    <div class="complexity-label">Average</div>
-                    <div class="complexity-value">O(n²)</div>
-                  </div>
-                  <div class="complexity-item best">
-                    <div class="complexity-label">Best</div>
-                    <div class="complexity-value">O(n)</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button class="controls-toggle" onclick="toggleControls()">
-          <span>⚙️</span>
-          <span>Controls</span>
-        </button>
+        <div class="logo">Algorithm Visualizer</div>
       </div>
     </header>
 
-    <!-- Controls Panel -->
-    <div class="controls-overlay" onclick="toggleControls()"></div>
-    <div class="controls-panel" id="controlsPanel">
-      <div class="control-group">
-        <label class="control-label">Actions</label>
-        
-      </div>
-      <div class="control-group">
-        <label class="control-label">Animation Speed</label>
-        
-      </div>
-    </div>
-
-    <!-- Main Content -->
     <main class="content">
       <div class="visualization-container">
         <div class="button-container">
           <button class="control-button" onclick="startSort()">▶️ Start Sorting</button>
           <button class="control-button" onclick="generateArray()">🔄 Generate New Array</button>
         </div>
+        
         <div class="speed-control">
           <input type="range" class="speed-slider" id="speed" min="10" max="1000" value="300" oninput="updateSpeed(this.value)">
           <div class="speed-display" id="speedDisplay">300ms</div>
         </div>
+        
         <div id="array-container"></div>
       </div>
+      
       <div class="stats">
         <div class="stat">
           <div class="stat-label">Comparisons</div>
@@ -84,6 +44,7 @@
       </div>
     </main>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>

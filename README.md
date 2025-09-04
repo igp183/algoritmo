@@ -6,6 +6,8 @@ Currently in early stages of development 🏗️👷
 
 For now only bubble sort is available for visualization.
 
+**You can test it here:** https://igp183.github.io/algoritus/
+
 ## Features
 
 - **Visual Sorting Animation**:

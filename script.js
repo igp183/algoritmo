@@ -1,120 +1,153 @@
 const array = [];
-const multFactor = 8;
-const numBars = 25;
-const maxValue = 30;
+const MULT_FACTOR = 8;
+const NUM_BARS = 25;
+const MAX_VALUE = 30;
+
 let animationSpeed = 300;
 let comparisons = 0;
 let swaps = 0;
 let isRunning = false;
 
 function generateArray() {
-    if (isRunning) return;
+  if (isRunning) return;
+  
+  const container = document.getElementById("array-container");
+  container.innerHTML = "";
+  array.length = 0;
+  
+  resetStats();
+  
+  for (let i = 0; i < NUM_BARS; i++) {
+    const value = Math.floor(Math.random() * MAX_VALUE) + 1;
+    const bar = createBar(value);
+    
+    container.appendChild(bar);
+    array.push({ value, element: bar });
+    
+    setTimeout(() => {
+      bar.style.height = (value * MULT_FACTOR) + "px";
+    }, 10);
+  }
+}
 
-    const container = document.getElementById("array-container");
-    container.innerHTML = "";
-    array.length = 0;
+function createBar(value) {
+  const bar = document.createElement("div");
+  bar.classList.add("bar");
+  bar.style.height = "0px";
+  bar.textContent = value;
+  return bar;
+}
 
-    comparisons = 0;
-    swaps = 0;
-    document.getElementById('comparisons').textContent = '0';
-    document.getElementById('swaps').textContent = '0';
+function resetStats() {
+  comparisons = 0;
+  swaps = 0;
+  updateStatsDisplay();
+}
 
-    for (let i = 0; i < numBars; i++) {
-        const value = Math.floor(Math.random() * maxValue) + 1;
-        const bar = document.createElement("div");
-        bar.classList.add("bar");
-        bar.style.height = "0px";
-        bar.textContent = value;
-        container.appendChild(bar);
-        array.push({ value, element: bar });
-
-        // Set final height after a small delay to trigger transition
-        setTimeout(() => {
-            bar.style.height = (value * multFactor) + "px";
-        }, 10);
-    }
+function updateStatsDisplay() {
+  document.getElementById('comparisons').textContent = comparisons;
+  document.getElementById('swaps').textContent = swaps;
 }
 
 async function bubbleSort() {
-    if (isRunning) return;
-    isRunning = true;
-
-    const len = array.length;
-
-    for (let i = 0; i < len; i++) {
-        let swapped = false;
-
-        for (let j = 0; j < len - i - 1; j++) {
-            array[j].element.classList.add('comparing');
-            array[j + 1].element.classList.add('comparing');
-
-            comparisons++;
-            document.getElementById('comparisons').textContent = comparisons;
-            await new Promise(r => setTimeout(r, animationSpeed));
-
-            if (array[j].value > array[j + 1].value) {
-                array[j].element.classList.add('swapping');
-                array[j + 1].element.classList.add('swapping');
-
-                // Swap values
-                const temp = array[j].value;
-                array[j].value = array[j + 1].value;
-                array[j + 1].value = temp;
-
-                swaps++;
-                document.getElementById('swaps').textContent = swaps;
-
-                array[j].element.style.height = (array[j].value * multFactor) + "px";
-                array[j + 1].element.style.height = (array[j + 1].value * multFactor) + "px";
-
-                setTimeout(() => {
-                    array[j].element.textContent = array[j].value;
-                    array[j + 1].element.textContent = array[j + 1].value;
-                }, animationSpeed / 2);
-
-                await new Promise(r => setTimeout(r, animationSpeed));
-
-                array[j].element.classList.remove('swapping');
-                array[j + 1].element.classList.remove('swapping');
-
-                swapped = true;
-            }
-
-            array[j].element.classList.remove('comparing');
-            array[j + 1].element.classList.remove('comparing');
-        }
-
-        array[len - i - 1].element.classList.add('sorted');
-
-        if (!swapped) {
-            // Mark remaining unsorted bars as sorted after early exit
-            for (let k = 0; k < len - i - 1; k++) {
-                array[k].element.classList.add('sorted');
-                await new Promise(r => setTimeout(r, 30));
-            }
-            break;
-        }
+  if (isRunning) return;
+  isRunning = true;
+  
+  const len = array.length;
+  
+  for (let i = 0; i < len; i++) {
+    let swapped = false;
+    
+    for (let j = 0; j < len - i - 1; j++) {
+      await highlightComparison(j, j + 1);
+      
+      if (array[j].value > array[j + 1].value) {
+        await performSwap(j, j + 1);
+        swapped = true;
+      }
+      
+      removeHighlight(j, j + 1, 'comparing');
     }
+    
+    array[len - i - 1].element.classList.add('sorted');
+    
+    if (!swapped) {
+      await markRemainingSorted(len - i - 1);
+      break;
+    }
+  }
+  
+  isRunning = false;
+}
 
-    isRunning = false;
+async function highlightComparison(index1, index2) {
+  array[index1].element.classList.add('comparing');
+  array[index2].element.classList.add('comparing');
+  comparisons++;
+  updateStatsDisplay();
+  await sleep(animationSpeed);
+}
+
+async function performSwap(index1, index2) {
+  array[index1].element.classList.add('swapping');
+  array[index2].element.classList.add('swapping');
+  
+  const temp = array[index1].value;
+  array[index1].value = array[index2].value;
+  array[index2].value = temp;
+  
+  swaps++;
+  updateStatsDisplay();
+  
+  array[index1].element.style.height = (array[index1].value * MULT_FACTOR) + "px";
+  array[index2].element.style.height = (array[index2].value * MULT_FACTOR) + "px";
+  
+  setTimeout(() => {
+    array[index1].element.textContent = array[index1].value;
+    array[index2].element.textContent = array[index2].value;
+  }, animationSpeed / 2);
+  
+  await sleep(animationSpeed);
+  
+  array[index1].element.classList.remove('swapping');
+  array[index2].element.classList.remove('swapping');
+}
+
+function removeHighlight(index1, index2, className) {
+  array[index1].element.classList.remove(className);
+  array[index2].element.classList.remove(className);
+}
+
+async function markRemainingSorted(startIndex) {
+  for (let k = 0; k < startIndex; k++) {
+    array[k].element.classList.add('sorted');
+    await sleep(30);
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function updateSpeed(value) {
-    animationSpeed = parseInt(value);
-    document.getElementById('speedDisplay').textContent = value + 'ms';
+  animationSpeed = parseInt(value);
+  document.getElementById('speedDisplay').textContent = value + 'ms';
 }
 
 function startSort() {
-    if (isRunning) return;
-
-    array.forEach(item => {
-        item.element.classList.remove('sorted', 'comparing', 'swapping');
-    });
-
-    bubbleSort();
+  if (isRunning) return;
+  
+  array.forEach(item => {
+    item.element.classList.remove('sorted', 'comparing', 'swapping');
+  });
+  
+  bubbleSort();
 }
 
-// Initialize
-generateArray();
-document.getElementById('speed').value = animationSpeed;
-document.getElementById('speedDisplay').textContent = animationSpeed + 'ms';
+function initialize() {
+  generateArray();
+  document.getElementById('speed').value = animationSpeed;
+  document.getElementById('speedDisplay').textContent = animationSpeed + 'ms';
+}
+
+initialize();
