@@ -1,24 +1,24 @@
 const array = [];
 const MULT_FACTOR = 8;
-const NUM_BARS = 25;
+let NUM_BARS = 50;
 const MAX_VALUE = 30;
 
 let animationSpeed = 300;
 let comparisons = 0;
 let swaps = 0;
+let arrayAccesses = 0;
 let isRunning = false;
+let isPaused = false;
+let startTime = 0;
+let elapsedTime = 0;
+let timeInterval = null;
+let currentAlgorithm = 'Bubble Sort';
 
 /**
  * Generates a new random array of bars and renders them in the container
- * - Clears the existing array and bars
- * - Resets comparisons and swaps
- * - Creates NUM_BARS between 1 and MAX_VALUE
- * - Animates the bars growing to their designated height
- * 
- * Prevents execution if a sorting algorithm is currently running
  */
 function generateArray() {
-  if (isRunning) return;
+  if (isRunning && !isPaused) return;
   
   const container = document.getElementById("array-container");
   container.innerHTML = "";
@@ -35,29 +35,78 @@ function generateArray() {
     
     setTimeout(() => {
       bar.style.height = (value * MULT_FACTOR) + "px";
-    }, 10);
+    }, i * 10);
   }
+  
+  updateStatus('Ready to Sort', 'ready');
+}
+
+/**
+ * Shuffles the existing array
+ */
+function shuffleArray() {
+  if (isRunning && !isPaused) return;
+  
+  resetStats();
+  
+  // Fisher-Yates shuffle algorithm
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    
+    // Swap values
+    const tempValue = array[i].value;
+    array[i].value = array[j].value;
+    array[j].value = tempValue;
+    
+    // Update visual representation
+    array[i].element.style.height = (array[i].value * MULT_FACTOR) + "px";
+    array[i].element.textContent = array[i].value;
+    array[j].element.style.height = (array[j].value * MULT_FACTOR) + "px";
+    array[j].element.textContent = array[j].value;
+    
+    // Remove any sorting classes
+    array[i].element.classList.remove('sorted', 'comparing', 'swapping');
+    array[j].element.classList.remove('sorted', 'comparing', 'swapping');
+  }
+  
+  updateStatus('Ready to Sort', 'ready');
 }
 
 /**
  * Creates a single bar element representing a value
- * @param {number} value - The value of the bar from 1 to MAX_VALUE
- * @return {HTMLDivElement} A div element styled as a bar with text showing a value
  */
 function createBar(value) {
   const bar = document.createElement("div");
   bar.classList.add("bar");
   bar.style.height = "0px";
   bar.textContent = value;
+  
+  // Add size-based classes for responsive bar styling
+  if (NUM_BARS <= 25) {
+    bar.classList.add("small-array");
+  } else if (NUM_BARS <= 50) {
+    bar.classList.add("medium-array");
+  } else if (NUM_BARS <= 75) {
+    bar.classList.add("large-array");
+  } else {
+    bar.classList.add("extra-large-array");
+  }
+  
   return bar;
 }
 
 /**
- * Resets comparison and swap counters to zero then updates the UI
+ * Resets all statistics and timers
  */
 function resetStats() {
   comparisons = 0;
   swaps = 0;
+  arrayAccesses = 0;
+  elapsedTime = 0;
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+  }
   updateStatsDisplay();
 }
 
@@ -67,24 +116,49 @@ function resetStats() {
 function updateStatsDisplay() {
   document.getElementById('comparisons').textContent = comparisons;
   document.getElementById('swaps').textContent = swaps;
+  document.getElementById('arrayAccesses').textContent = arrayAccesses;
+  document.getElementById('timeElapsed').textContent = elapsedTime.toFixed(1) + 's';
 }
 
 /**
- * Performs the bubble sort algorithm on the global array
- * - Stops early if no swaps are made in a pass (optimization)
- * 
- * Prevents multiple executions by checking and setting the isRunning
+ * Updates the status indicator
+ */
+function updateStatus(text, className) {
+  const statusElement = document.getElementById('statusIndicator');
+  statusElement.textContent = text;
+  statusElement.className = `status ${className}`;
+}
+
+/**
+ * Starts the timer for tracking elapsed time
+ */
+function startTimer() {
+  startTime = Date.now();
+  timeInterval = setInterval(() => {
+    if (!isPaused) {
+      elapsedTime = (Date.now() - startTime) / 1000;
+      updateStatsDisplay();
+    }
+  }, 100);
+}
+
+/**
+ * Bubble Sort Algorithm
  */
 async function bubbleSort() {
-  if (isRunning) return;
-  isRunning = true;
-  
   const len = array.length;
   
   for (let i = 0; i < len; i++) {
     let swapped = false;
     
     for (let j = 0; j < len - i - 1; j++) {
+      if (!isRunning) return;
+      
+      while (isPaused) {
+        await sleep(50);
+        if (!isRunning) return;
+      }
+      
       await highlightComparison(j, j + 1);
       
       if (array[j].value > array[j + 1].value) {
@@ -102,37 +176,274 @@ async function bubbleSort() {
       break;
     }
   }
+}
+
+/**
+ * Selection Sort Algorithm
+ */
+async function selectionSort() {
+  const len = array.length;
   
-  isRunning = false;
+  for (let i = 0; i < len; i++) {
+    if (!isRunning) return;
+    
+    let minIndex = i;
+    array[minIndex].element.classList.add('comparing');
+    
+    for (let j = i + 1; j < len; j++) {
+      if (!isRunning) return;
+      
+      while (isPaused) {
+        await sleep(50);
+        if (!isRunning) return;
+      }
+      
+      await highlightComparison(minIndex, j);
+      
+      if (array[j].value < array[minIndex].value) {
+        array[minIndex].element.classList.remove('comparing');
+        minIndex = j;
+        array[minIndex].element.classList.add('comparing');
+      }
+      
+      removeHighlight(minIndex, j, 'comparing');
+    }
+    
+    if (minIndex !== i) {
+      await performSwap(i, minIndex);
+    }
+    
+    array[minIndex].element.classList.remove('comparing');
+    array[i].element.classList.add('sorted');
+  }
+}
+
+/**
+ * Insertion Sort Algorithm
+ */
+async function insertionSort() {
+  const len = array.length;
+  array[0].element.classList.add('sorted');
+  
+  for (let i = 1; i < len; i++) {
+    if (!isRunning) return;
+    
+    let key = array[i].value;
+    let j = i - 1;
+    
+    array[i].element.classList.add('comparing');
+    
+    while (j >= 0) {
+      if (!isRunning) return;
+      
+      while (isPaused) {
+        await sleep(50);
+        if (!isRunning) return;
+      }
+      
+      await highlightComparison(j, j + 1);
+      
+      if (array[j].value <= key) {
+        removeHighlight(j, j + 1, 'comparing');
+        break;
+      }
+      
+      // Shift element to the right
+      array[j + 1].value = array[j].value;
+      array[j + 1].element.style.height = (array[j + 1].value * MULT_FACTOR) + "px";
+      array[j + 1].element.textContent = array[j + 1].value;
+      arrayAccesses += 2;
+      updateStatsDisplay();
+      
+      removeHighlight(j, j + 1, 'comparing');
+      j--;
+      
+      await sleep(animationSpeed / 2);
+    }
+    
+    array[j + 1].value = key;
+    array[j + 1].element.style.height = (key * MULT_FACTOR) + "px";
+    array[j + 1].element.textContent = key;
+    array[j + 1].element.classList.remove('comparing');
+    array[j + 1].element.classList.add('sorted');
+    
+    arrayAccesses++;
+    updateStatsDisplay();
+  }
+}
+
+/**
+ * Quick Sort Algorithm (main function)
+ */
+async function quickSort() {
+  await quickSortHelper(0, array.length - 1);
+  
+  // Mark all as sorted
+  for (let i = 0; i < array.length; i++) {
+    array[i].element.classList.add('sorted');
+    await sleep(30);
+  }
+}
+
+/**
+ * Quick Sort Helper (recursive)
+ */
+async function quickSortHelper(low, high) {
+  if (low < high && isRunning) {
+    let pivotIndex = await partition(low, high);
+    
+    if (pivotIndex !== -1) {
+      await quickSortHelper(low, pivotIndex - 1);
+      await quickSortHelper(pivotIndex + 1, high);
+    }
+  }
+}
+
+/**
+ * Partition function for Quick Sort
+ */
+async function partition(low, high) {
+  let pivot = array[high].value;
+  array[high].element.classList.add('comparing');
+  let i = low - 1;
+  
+  for (let j = low; j < high; j++) {
+    if (!isRunning) return -1;
+    
+    while (isPaused) {
+      await sleep(50);
+      if (!isRunning) return -1;
+    }
+    
+    await highlightComparison(j, high);
+    
+    if (array[j].value < pivot) {
+      i++;
+      if (i !== j) {
+        await performSwap(i, j);
+      }
+    }
+    
+    removeHighlight(j, high, 'comparing');
+  }
+  
+  if (i + 1 !== high) {
+    await performSwap(i + 1, high);
+  }
+  
+  array[high].element.classList.remove('comparing');
+  return i + 1;
+}
+
+/**
+ * Merge Sort Algorithm (main function)
+ */
+async function mergeSort() {
+  await mergeSortHelper(0, array.length - 1);
+  
+  // Mark all as sorted
+  for (let i = 0; i < array.length; i++) {
+    array[i].element.classList.add('sorted');
+    await sleep(30);
+  }
+}
+
+/**
+ * Merge Sort Helper (recursive)
+ */
+async function mergeSortHelper(left, right) {
+  if (left < right && isRunning) {
+    let middle = Math.floor((left + right) / 2);
+    
+    await mergeSortHelper(left, middle);
+    await mergeSortHelper(middle + 1, right);
+    await merge(left, middle, right);
+  }
+}
+
+/**
+ * Merge function for Merge Sort
+ */
+async function merge(left, middle, right) {
+  let leftArray = [];
+  let rightArray = [];
+  
+  // Copy data to temp arrays
+  for (let i = left; i <= middle; i++) {
+    leftArray.push(array[i].value);
+  }
+  for (let i = middle + 1; i <= right; i++) {
+    rightArray.push(array[i].value);
+  }
+  
+  let i = 0, j = 0, k = left;
+  
+  while (i < leftArray.length && j < rightArray.length) {
+    if (!isRunning) return;
+    
+    while (isPaused) {
+      await sleep(50);
+      if (!isRunning) return;
+    }
+    
+    array[k].element.classList.add('comparing');
+    comparisons++;
+    arrayAccesses += 2;
+    
+    if (leftArray[i] <= rightArray[j]) {
+      array[k].value = leftArray[i];
+      i++;
+    } else {
+      array[k].value = rightArray[j];
+      j++;
+    }
+    
+    array[k].element.style.height = (array[k].value * MULT_FACTOR) + "px";
+    array[k].element.textContent = array[k].value;
+    updateStatsDisplay();
+    
+    await sleep(animationSpeed);
+    array[k].element.classList.remove('comparing');
+    k++;
+  }
+  
+  while (i < leftArray.length) {
+    if (!isRunning) return;
+    array[k].value = leftArray[i];
+    array[k].element.style.height = (array[k].value * MULT_FACTOR) + "px";
+    array[k].element.textContent = array[k].value;
+    arrayAccesses++;
+    updateStatsDisplay();
+    i++;
+    k++;
+  }
+  
+  while (j < rightArray.length) {
+    if (!isRunning) return;
+    array[k].value = rightArray[j];
+    array[k].element.style.height = (array[k].value * MULT_FACTOR) + "px";
+    array[k].element.textContent = array[k].value;
+    arrayAccesses++;
+    updateStatsDisplay();
+    j++;
+    k++;
+  }
 }
 
 /**
  * Highlights two bars being compared during sorting
- * - Adds the 'comparing' CSS class to both bars
- * - Increments the global comparisons counter
- * - Pauses execution during animaitonSpeed time
- * 
- * @param {number} index1 - Index of the first bar
- * @param {number} index2 - Index of the second bar
  */
 async function highlightComparison(index1, index2) {
   array[index1].element.classList.add('comparing');
   array[index2].element.classList.add('comparing');
   comparisons++;
+  arrayAccesses += 2;
   updateStatsDisplay();
   await sleep(animationSpeed);
 }
 
 /**
  * Swaps the values of two bars and animates the change
- * - Adds the 'swapping' CSS class to both the bars
- * - Swaps their value properties
- * - Updates bar heights and labels
- * - Increments the global swaps counter
- * - Waits for animaitonSpeed duration before removing highlight
- * 
- * @param {number} index1 - Index of the first bar
- * @param {number} index2 - Index of the second bar
  */
 async function performSwap(index1, index2) {
   array[index1].element.classList.add('swapping');
@@ -143,6 +454,7 @@ async function performSwap(index1, index2) {
   array[index2].value = temp;
   
   swaps++;
+  arrayAccesses += 4; // 2 reads, 2 writes
   updateStatsDisplay();
   
   array[index1].element.style.height = (array[index1].value * MULT_FACTOR) + "px";
@@ -161,20 +473,14 @@ async function performSwap(index1, index2) {
 
 /**
  * Removes a specific CSS class from two bars
- * @param {number} index1 - Index of the first bar
- * @param {number} index2 - Index of the second bar
- * @param {string} className - The class to remove
  */
 function removeHighlight(index1, index2, className) {
-  array[index1].element.classList.remove(className);
-  array[index2].element.classList.remove(className);
+  if (array[index1]) array[index1].element.classList.remove(className);
+  if (array[index2]) array[index2].element.classList.remove(className);
 }
 
-/**markRem
- * Marks all remaining bars as sorted starting from index 0 up to startIndex - 1
- * - Used when the array becomes sorted before completing all passes
- * - Adds the 'sorted' class with a slight delay for visual effect
- * @param {number} startIndex - Index where sorted section starts
+/**
+ * Marks all remaining bars as sorted
  */
 async function markRemainingSorted(startIndex) {
   for (let k = 0; k < startIndex; k++) {
@@ -185,50 +491,190 @@ async function markRemainingSorted(startIndex) {
 
 /**
  * Creates a delay for animations
- * @param {number} ms - Time in miliseconds to pause execution
- * @returns {Promise<void>} Resolves after ms miliseconds
  */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * Updates the animation speed for sorting
- * - Sets animationSpeed to the given value
- * - Updates the UI to show the new speed
- * @param {number} value - The new animation speed in miliseconds
+ * Updates the animation speed
  */
 function updateSpeed(value) {
   animationSpeed = parseInt(value);
   document.getElementById('speedDisplay').textContent = value + 'ms';
+  document.getElementById('speedLabel').textContent = value + 'ms';
 }
 
 /**
- * Initiates the Bubble Sort
- * - Prevents starting if a sort is already running
- * - Clears any existing visual states
- * - Calls bubbleSort() to start sorting
- * @returns 
+ * Updates the array size
  */
-function startSort() {
-  if (isRunning) return;
+function updateSize(value) {
+  NUM_BARS = parseInt(value);
+  document.getElementById('sizeValue').textContent = value;
+  if (!isRunning) {
+    generateArray();
+  }
+}
+
+/**
+ * Starts the sorting process
+ */
+async function startSort() {
+  if (isRunning && !isPaused) return;
+  
+  if (isPaused) {
+    isPaused = false;
+    updateStatus('Sorting...', 'running');
+    return;
+  }
+  
+  isRunning = true;
+  isPaused = false;
+  
+  // Clear any existing visual states
+  array.forEach(item => {
+    item.element.classList.remove('sorted', 'comparing', 'swapping');
+  });
+  
+  resetStats();
+  startTimer();
+  updateStatus('Sorting...', 'running');
+  
+  try {
+    switch (currentAlgorithm) {
+      case 'Bubble Sort':
+        await bubbleSort();
+        break;
+      case 'Selection Sort':
+        await selectionSort();
+        break;
+      case 'Insertion Sort':
+        await insertionSort();
+        break;
+      case 'Quick Sort':
+        await quickSort();
+        break;
+      case 'Merge Sort':
+        await mergeSort();
+        break;
+    }
+    
+    if (isRunning) {
+      updateStatus('Sorting Complete!', 'ready');
+    }
+  } catch (error) {
+    console.error('Sorting error:', error);
+    updateStatus('Error occurred', 'paused');
+  }
+  
+  isRunning = false;
+  isPaused = false;
+  
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+  }
+}
+
+/**
+ * Pauses/resumes the sorting
+ */
+function pauseSort() {
+  if (!isRunning) return;
+  
+  isPaused = !isPaused;
+  
+  if (isPaused) {
+    updateStatus('Paused', 'paused');
+  } else {
+    updateStatus('Sorting...', 'running');
+  }
+}
+
+/**
+ * Resets the visualization
+ */
+function resetSort() {
+  isRunning = false;
+  isPaused = false;
+  
+  if (timeInterval) {
+    clearInterval(timeInterval);
+    timeInterval = null;
+  }
   
   array.forEach(item => {
     item.element.classList.remove('sorted', 'comparing', 'swapping');
   });
   
-  bubbleSort();
+  resetStats();
+  updateStatus('Ready to Sort', 'ready');
 }
 
 /**
- * Initializes the sorting visualizer on page load
- * - Generates the initial random array
- * - Sets the speed control slider and display to match animationSpeed
+ * Handles keyboard shortcuts
+ */
+function handleKeyPress(event) {
+  switch (event.code) {
+    case 'Space':
+      event.preventDefault();
+      pauseSort();
+      break;
+    case 'Enter':
+      event.preventDefault();
+      startSort();
+      break;
+    case 'KeyR':
+      if (!isRunning) {
+        resetSort();
+      }
+      break;
+    case 'KeyG':
+      if (!isRunning) {
+        generateArray();
+      }
+      break;
+  }
+}
+
+/**
+ * Initializes the sorting visualizer
  */
 function initialize() {
   generateArray();
-  document.getElementById('speed').value = animationSpeed;
-  document.getElementById('speedDisplay').textContent = animationSpeed + 'ms';
+  
+  // Set up event listeners
+  document.getElementById('algorithm').addEventListener('change', (e) => {
+    currentAlgorithm = e.target.value;
+    if (!isRunning) resetSort();
+  });
+  
+  document.getElementById('size').addEventListener('input', (e) => {
+    updateSize(e.target.value);
+  });
+  
+  document.getElementById('speed').addEventListener('input', (e) => {
+    updateSpeed(e.target.value);
+  });
+  
+  document.getElementById('generateBtn').addEventListener('click', generateArray);
+  document.getElementById('shuffleBtn').addEventListener('click', shuffleArray);
+  document.getElementById('startBtn').addEventListener('click', startSort);
+  document.getElementById('pauseBtn').addEventListener('click', pauseSort);
+  document.getElementById('resetBtn').addEventListener('click', resetSort);
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', handleKeyPress);
+  
+  // Initialize UI values
+  updateSpeed(animationSpeed);
+  updateSize(NUM_BARS);
+  updateStatus('Ready to Sort', 'ready');
 }
 
-initialize();
+// Initialize when DOM is loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}

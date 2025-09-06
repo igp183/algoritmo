@@ -1,48 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Algorithm Visualizer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Algorithm Visualizer — Advanced</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="main-container">
-    <header class="header">
-      <div class="header-content">
-        <div class="logo">Algorithm Visualizer</div>
-      </div>
-    </header>
+  <div class="app">
+    <!-- LEFT: Controls -->
+    <aside class="controls">
+      <div class="brand">Algorithm Visualizer</div>
 
-    <main class="content">
-      <div class="visualization-container">
-        <div class="button-container">
-          <button class="control-button" onclick="startSort()">▶️ Start Sorting</button>
-          <button class="control-button" onclick="generateArray()">🔄 Generate New Array</button>
-        </div>
-        
-        <div class="speed-control">
-          <input type="range" class="speed-slider" id="speed" min="10" max="1000" value="300" oninput="updateSpeed(this.value)">
-          <div class="speed-display" id="speedDisplay">300ms</div>
-        </div>
-        
-        <div id="array-container"></div>
+      <div class="group">
+        <label for="algorithm">Algorithm</label>
+        <select id="algorithm">
+          <option>Bubble Sort</option>
+          <option>Selection Sort</option>
+          <option>Insertion Sort</option>
+          <option>Quick Sort</option>
+          <option>Merge Sort</option>
+        </select>
       </div>
-      
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-label">Comparisons</div>
-          <div class="stat-value" id="comparisons">0</div>
+
+      <div class="group">
+        <label for="size">Array size: <span id="sizeValue">50</span></label>
+        <input id="size" type="range" min="10" max="100" value="50">
+      </div>
+
+      <div class="group">
+        <label for="speed">Speed: <span id="speedLabel">300ms</span></label>
+        <input id="speed" type="range" min="10" max="1000" value="300">
+        <div class="speed-display" id="speedDisplay">300ms</div>
+      </div>
+
+      <div class="group">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="generateBtn" class="btn small">🔄 Generate</button>
+          <button id="shuffleBtn" class="ghost small">🎲 Shuffle</button>
         </div>
-        <div class="stat">
-          <div class="stat-label">Swaps</div>
-          <div class="stat-value" id="swaps">0</div>
+        <button id="startBtn" class="btn">▶️ Start Sorting</button>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="pauseBtn" class="ghost small">⏸ Pause</button>
+          <button id="stepBtn" class="ghost small">⏭ Step</button>
+          <button id="resetBtn" class="ghost small">🔄 Reset</button>
         </div>
+      </div>
+
+      <div class="tip">
+        <strong>Keyboard shortcuts:</strong><br>
+        Space = Pause/Resume<br>
+        Enter = Start<br>
+        R = Reset<br>
+        G = Generate new array
+      </div>
+    </aside>
+
+    <!-- CENTER: Visualization -->
+    <main class="visual">
+      <div class="visual-top">
+        <div class="title">Sorting Visualization</div>
+        <div style="font-size:13px;color:var(--muted)">Active • Live</div>
+      </div>
+
+      <div class="canvas">
+        <div id="array-container" aria-live="polite"></div>
       </div>
     </main>
+
+    <!-- RIGHT: Stats -->
+    <aside class="stats-panel">
+      <div class="stats-title">Statistics</div>
+      
+      <div class="stat">
+        <div class="label">Comparisons</div>
+        <div id="comparisons" class="value">0</div>
+      </div>
+      
+      <div class="stat">
+        <div class="label">Swaps</div>
+        <div id="swaps" class="value">0</div>
+      </div>
+      
+      <div class="stat">
+        <div class="label">Array Accesses</div>
+        <div id="arrayAccesses" class="value">0</div>
+      </div>
+      
+      <div class="stat">
+        <div class="label">Time Elapsed</div>
+        <div id="timeElapsed" class="value">0s</div>
+      </div>
+
+      <div id="statusIndicator" class="status ready">Ready to Sort</div>
+
+      <div class="tip">
+        🔴 Swapping
+        🟠 Comparing
+        🟢 Sorted
+      </div>
+    </aside>
   </div>
 
   <script src="script.js"></script>
